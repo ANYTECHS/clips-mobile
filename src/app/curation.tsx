@@ -1,12 +1,6 @@
-import { useState, useMemo } from 'react';
-import {
-  FlatList,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
@@ -14,133 +8,45 @@ import { ThemedView } from '@/components/themed-view';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
-type Clip = {
-  id: string;
-  duration: string;
-  score: number;
-  /** seconds since epoch – used for "Recent" sort */
-  createdAt: number;
-};
+const TEAL = '#00C4B4';
 
 type Tab = 'all' | 'viral' | 'recent';
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-
-const CLIPS: Clip[] = Array.from({ length: 12 }, (_, i) => ({
-  id: String(i + 1),
-  duration: `0:${String(15 + (i % 4) * 10).padStart(2, '0')}`,
-  score: 98 - i * 3,
-  createdAt: Date.now() - i * 60_000,
-}));
-
-// ─── Sub-components ──────────────────────────────────────────────────────────
-
-function ClipCard({
-  clip,
-  selected,
-  isTop,
-  onPress,
-}: {
-  clip: Clip;
-  selected: boolean;
-  isTop: boolean;
-  onPress: () => void;
-}) {
-  const theme = useTheme();
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={[
-        styles.card,
-        { backgroundColor: theme.backgroundElement },
-        selected && { borderColor: '#00D4AA', borderWidth: 2 },
-      ]}
-    >
-      {/* Thumbnail placeholder */}
-      <View style={[styles.thumbnail, { backgroundColor: theme.backgroundSelected }]}>
-        {isTop && (
-          <View style={styles.viralBadge}>
-            <Text style={styles.viralBadgeText}>VIRAL POTENTIAL</Text>
-          </View>
-        )}
-        {selected && (
-          <View style={styles.checkOverlay}>
-            <Text style={styles.checkmark}>✓</Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.cardMeta}>
-        <ThemedText type="small">{clip.duration}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          Score: {clip.score}
-        </ThemedText>
-      </View>
-    </Pressable>
-  );
+interface Clip {
+  id: string;
+  thumbnail: string;
+  duration: string;
+  score: number;
+  createdAt: number;
 }
 
-function TabBar({
-  active,
-  onChange,
-}: {
-  active: Tab;
-  onChange: (t: Tab) => void;
-}) {
-  const theme = useTheme();
-  const tabs: { key: Tab; label: string }[] = [
-    { key: 'all', label: 'All Clips' },
-    { key: 'viral', label: 'High Virality' },
-    { key: 'recent', label: 'Recent' },
-  ];
+const CLIPS: Clip[] = [
+  { id: '1', thumbnail: '', duration: '0:45', score: 98, createdAt: 5 },
+  { id: '2', thumbnail: '', duration: '0:32', score: 87, createdAt: 4 },
+  { id: '3', thumbnail: '', duration: '1:00', score: 91, createdAt: 3 },
+  { id: '4', thumbnail: '', duration: '0:18', score: 72, createdAt: 2 },
+  { id: '5', thumbnail: '', duration: '0:55', score: 65, createdAt: 1 },
+  { id: '6', thumbnail: '', duration: '0:27', score: 83, createdAt: 6 },
+];
 
-  return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={styles.tabBar}
-    >
-      {tabs.map((t) => (
-        <Pressable
-          key={t.key}
-          onPress={() => onChange(t.key)}
-          style={[
-            styles.tab,
-            { borderColor: theme.backgroundElement },
-            active === t.key && { borderColor: '#00D4AA', backgroundColor: '#00D4AA22' },
-          ]}
-        >
-          <ThemedText
-            type="smallBold"
-            style={active === t.key ? { color: '#00D4AA' } : undefined}
-          >
-            {t.label}
-          </ThemedText>
-        </Pressable>
-      ))}
-    </ScrollView>
-  );
+const TOP_CLIP_ID = CLIPS.reduce((a, b) => (a.score > b.score ? a : b)).id;
+
+function filterClips(clips: Clip[], tab: Tab): Clip[] {
+  if (tab === 'viral') return clips.filter((c) => c.score >= 80);
+  if (tab === 'recent') return [...clips].sort((a, b) => b.createdAt - a.createdAt);
+  return clips;
 }
-
-// ─── Screen ──────────────────────────────────────────────────────────────────
 
 export default function CurationScreen() {
+  const router = useRouter();
   const theme = useTheme();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [tab, setTab] = useState<Tab>('all');
 
-  const filtered = useMemo(() => {
-    if (tab === 'viral') return [...CLIPS].sort((a, b) => b.score - a.score).slice(0, 6);
-    if (tab === 'recent') return [...CLIPS].sort((a, b) => b.createdAt - a.createdAt);
-    return CLIPS;
-  }, [tab]);
+  const visible = useMemo(() => filterClips(CLIPS, tab), [tab]);
+  const allSelected = visible.length > 0 && visible.every((c) => selected.has(c.id));
 
-  const allSelected = filtered.length > 0 && filtered.every((c) => selected.has(c.id));
-
-  function toggleSelect(id: string) {
+  function toggleClip(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
@@ -152,66 +58,120 @@ export default function CurationScreen() {
     if (allSelected) {
       setSelected((prev) => {
         const next = new Set(prev);
-        filtered.forEach((c) => next.delete(c.id));
+        visible.forEach((c) => next.delete(c.id));
         return next;
       });
     } else {
-      setSelected((prev) => new Set([...prev, ...filtered.map((c) => c.id)]));
+      setSelected((prev) => new Set([...prev, ...visible.map((c) => c.id)]));
     }
   }
 
-  const topId = filtered[0]?.id;
-  const count = selected.size;
+  const selectedCount = [...selected].filter((id) => visible.some((c) => c.id === id)).length;
+
+  const TABS: { key: Tab; label: string }[] = [
+    { key: 'all', label: 'All Clips' },
+    { key: 'viral', label: 'High Virality' },
+    { key: 'recent', label: 'Recent' },
+  ];
 
   return (
-    <ThemedView style={styles.root}>
-      <SafeAreaView style={styles.safe} edges={['top']}>
+    <ThemedView style={styles.container}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <View style={styles.header}>
-          <ThemedText type="subtitle">My Clips</ThemedText>
-          <View style={styles.headerRight}>
-            {count > 0 && (
-              <ThemedText type="small" themeColor="textSecondary">
-                {count} selected
-              </ThemedText>
-            )}
-            <Pressable onPress={toggleSelectAll} style={styles.selectAllBtn}>
-              <ThemedText type="smallBold" style={{ color: '#00D4AA' }}>
-                {allSelected ? 'Deselect All' : 'Select All'}
-              </ThemedText>
-            </Pressable>
-          </View>
+          <ThemedText type="subtitle">Your Clips</ThemedText>
+          <Pressable onPress={toggleSelectAll}>
+            <ThemedText type="small" style={{ color: TEAL }}>
+              {allSelected ? 'Deselect All' : 'Select All'}
+            </ThemedText>
+          </Pressable>
         </View>
 
-        {/* Tabs */}
-        <TabBar active={tab} onChange={setTab} />
+        {/* Tab bar */}
+        <View style={[styles.tabBar, { backgroundColor: theme.backgroundElement }]}>
+          {TABS.map(({ key, label }) => (
+            <Pressable
+              key={key}
+              style={[styles.tab, tab === key && { backgroundColor: TEAL, borderRadius: Spacing.two }]}
+              onPress={() => setTab(key)}
+            >
+              <ThemedText
+                type="small"
+                style={tab === key ? styles.activeTabText : undefined}
+                themeColor={tab === key ? undefined : 'textSecondary'}
+              >
+                {label}
+              </ThemedText>
+            </Pressable>
+          ))}
+        </View>
 
         {/* Grid */}
         <FlatList
-          data={filtered}
-          keyExtractor={(c) => c.id}
+          data={visible}
+          keyExtractor={(item) => item.id}
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.grid}
-          renderItem={({ item }) => (
-            <ClipCard
-              clip={item}
-              selected={selected.has(item.id)}
-              isTop={item.id === topId}
-              onPress={() => toggleSelect(item.id)}
-            />
-          )}
+          renderItem={({ item }) => {
+            const isSelected = selected.has(item.id);
+            const isTop = item.id === TOP_CLIP_ID;
+            return (
+              <Pressable
+                style={[
+                  styles.card,
+                  { backgroundColor: theme.backgroundElement },
+                  isSelected && styles.cardSelected,
+                ]}
+                onPress={() => toggleClip(item.id)}
+              >
+                {/* Thumbnail placeholder */}
+                <View style={[styles.thumbnail, { backgroundColor: theme.backgroundSelected }]}>
+                  {isTop && (
+                    <View style={styles.viralBadge}>
+                      <ThemedText type="code" style={styles.viralBadgeText}>
+                        VIRAL POTENTIAL
+                      </ThemedText>
+                    </View>
+                  )}
+                  {isSelected && (
+                    <View style={styles.checkOverlay}>
+                      <ThemedText style={styles.checkmark}>✓</ThemedText>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.cardInfo}>
+                  <ThemedText type="small">{item.duration}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    Score: {item.score}
+                  </ThemedText>
+                </View>
+              </Pressable>
+            );
+          }}
         />
 
-        {/* Bottom action bar */}
+        {/* Bottom bar */}
         <View style={[styles.bottomBar, { borderTopColor: theme.backgroundElement }]}>
+          {selectedCount > 0 && (
+            <ThemedText type="small" themeColor="textSecondary">
+              {selectedCount} selected
+            </ThemedText>
+          )}
           <Pressable
-            disabled={count === 0}
-            style={[styles.postBtn, count === 0 && styles.postBtnDisabled]}
+            style={[
+              styles.postBtn,
+              { backgroundColor: selectedCount > 0 ? TEAL : theme.backgroundElement },
+            ]}
+            disabled={selectedCount === 0}
+            onPress={() => router.push('/')}
           >
-            <Text style={styles.postBtnText}>
-              {count > 0 ? `Post Selected Clips (${count})` : 'Post Selected Clips'}
-            </Text>
+            <ThemedText
+              type="smallBold"
+              style={{ color: selectedCount > 0 ? '#000' : theme.textSecondary }}
+            >
+              Post Selected Clips
+            </ThemedText>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -219,73 +179,78 @@ export default function CurationScreen() {
   );
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
-
 const styles = StyleSheet.create({
-  root: { flex: 1 },
-  safe: { flex: 1 },
-
+  container: { flex: 1 },
+  safeArea: { flex: 1 },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.three,
+    alignItems: 'center',
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+  },
+  tabBar: {
+    flexDirection: 'row',
+    marginHorizontal: Spacing.four,
+    borderRadius: Spacing.two,
+    padding: Spacing.half,
+    marginBottom: Spacing.three,
+  },
+  tab: {
+    flex: 1,
+    alignItems: 'center',
     paddingVertical: Spacing.two,
   },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  selectAllBtn: {
-    paddingHorizontal: Spacing.two,
-    paddingVertical: Spacing.one,
-    borderRadius: Spacing.two,
-  },
-
-  tabBar: { paddingHorizontal: Spacing.three, gap: Spacing.two, paddingBottom: Spacing.two },
-  tab: {
+  activeTabText: { color: '#000', fontWeight: '700' },
+  grid: {
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.one,
-    borderRadius: Spacing.five,
-    borderWidth: 1,
+    paddingBottom: Spacing.three,
+    gap: Spacing.two,
   },
-
-  grid: { paddingHorizontal: Spacing.two, paddingBottom: Spacing.six },
-  row: { gap: Spacing.two, marginBottom: Spacing.two },
-
-  card: { flex: 1, borderRadius: Spacing.two, overflow: 'hidden' },
-  thumbnail: { aspectRatio: 9 / 16, width: '100%', justifyContent: 'flex-end' },
-  cardMeta: {
+  row: { gap: Spacing.two },
+  card: {
+    flex: 1,
+    borderRadius: Spacing.three,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  cardSelected: { borderColor: TEAL },
+  thumbnail: {
+    aspectRatio: 9 / 16,
+    justifyContent: 'flex-end',
+  },
+  viralBadge: {
+    position: 'absolute',
+    top: Spacing.two,
+    left: Spacing.two,
+    backgroundColor: TEAL,
+    paddingHorizontal: Spacing.two,
+    paddingVertical: 2,
+    borderRadius: Spacing.one,
+  },
+  viralBadgeText: { color: '#000', fontWeight: '700' },
+  checkOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(0,196,180,0.35)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmark: { fontSize: 32, color: '#fff', fontWeight: '700' },
+  cardInfo: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: Spacing.two,
   },
-
-  viralBadge: {
-    margin: Spacing.one,
-    alignSelf: 'flex-start',
-    backgroundColor: '#FF4D6D',
-    paddingHorizontal: Spacing.one,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  viralBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-
-  checkOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#00D4AA44',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkmark: { color: '#fff', fontSize: 28, fontWeight: '700' },
-
   bottomBar: {
-    padding: Spacing.three,
     borderTopWidth: 1,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    gap: Spacing.two,
   },
   postBtn: {
-    backgroundColor: '#00D4AA',
-    borderRadius: Spacing.three,
-    paddingVertical: Spacing.two + Spacing.one,
+    paddingVertical: Spacing.two + 4,
+    borderRadius: Spacing.two,
     alignItems: 'center',
   },
-  postBtnDisabled: { backgroundColor: '#00D4AA55' },
-  postBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
