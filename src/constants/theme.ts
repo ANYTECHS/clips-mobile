@@ -7,6 +7,8 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+export const brandTeal = '#00BFA5';
+
 export const Colors = {
   light: {
     text: '#000000',
