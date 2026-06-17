@@ -26,6 +26,12 @@
     "plugins": [
       "expo-router",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "ClipCash needs access to your photos to let you pick videos for upload."
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "backgroundColor": "#208AEF",
@@ -35,13 +41,7 @@
           }
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "color": "#208AEF"
-        }
-      ],
-      "expo-background-fetch"
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true,
