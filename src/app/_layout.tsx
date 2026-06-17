@@ -1,25 +1,42 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import { useCallback } from 'react';
+import { Redirect, Stack } from 'expo-router';
+import { useCallback, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
 import { OfflineBanner } from '@/components/offline-banner';
 import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useAuthStore } from '@/stores/auth-store';
 import { ClipSelectionState } from '@/stores/clips-store';
 
-// Placeholder API function — replace with your real API client call.
 async function syncClipSelection(_clipId: string, _state: ClipSelectionState) {
-  // e.g. await api.patch(`/clips/${_clipId}`, { selected: _state === 'selected' });
+  // replaced by real api.patch call once api client is wired through
 }
 
-export default function TabLayout() {
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   const apiFn = useCallback(syncClipSelection, []);
   const isOnline = useNetworkStatus(apiFn);
 
+  const { isAuthenticated, isLoading, hydrate } = useAuthStore();
+
+  useEffect(() => {
+    hydrate();
+  }, []);
+
+  if (isLoading) return null;
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="sign-in" />
+        <Stack.Screen name="auth/callback" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+
+      {!isAuthenticated && <Redirect href="/sign-in" />}
+
       <AnimatedSplashOverlay />
       <AppTabs />
       <OfflineBanner isOnline={isOnline} />
