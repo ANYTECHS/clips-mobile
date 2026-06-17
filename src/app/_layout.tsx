@@ -1,43 +1,45 @@
-import { DarkTheme, DefaultTheme, ThemeProvider, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import { Redirect, Stack } from 'expo-router';
+import { useCallback, useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
-import { useAuthStore } from '@/store/auth-store';
+import { OfflineBanner } from '@/components/offline-banner';
+import { useNetworkStatus } from '@/hooks/use-network-status';
+import { useAuthStore } from '@/stores/auth-store';
+import { ClipSelectionState } from '@/stores/clips-store';
 
-function AuthGate() {
-  const { isAuthenticated, isLoading, refreshToken } = useAuthStore();
-  const segments = useSegments();
-  const router = useRouter();
-
-  // On mount, attempt to restore the token from secure storage.
-  useEffect(() => {
-    refreshToken();
-  }, []);
-
-  useEffect(() => {
-    if (isLoading) return;
-
-    const onAuthScreen = segments[0] === 'login';
-
-    if (!isAuthenticated && !onAuthScreen) {
-      router.replace('/login');
-    } else if (isAuthenticated && onAuthScreen) {
-      router.replace('/');
-    }
-  }, [isAuthenticated, isLoading, segments]);
-
-  return null;
+async function syncClipSelection(_clipId: string, _state: ClipSelectionState) {
+  // replaced by real api.patch call once api client is wired through
 }
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const apiFn = useCallback(syncClipSelection, []);
+  const isOnline = useNetworkStatus(apiFn);
+
+  const { isAuthenticated, isLoading, hydrate } = useAuthStore();
+
+  useEffect(() => {
+    hydrate();
+  }, []);
+
+  if (isLoading) return null;
+
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AuthGate />
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="sign-in" />
+        <Stack.Screen name="auth/callback" />
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+
+      {!isAuthenticated && <Redirect href="/sign-in" />}
+
       <AnimatedSplashOverlay />
       <AppTabs />
+      <OfflineBanner isOnline={isOnline} />
     </ThemeProvider>
   );
 }
