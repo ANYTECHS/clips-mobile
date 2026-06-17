@@ -1,6 +1,7 @@
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useCallback, useState } from 'react';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
@@ -8,8 +9,13 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { BottomTabInset, MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+
+async function fetchEarnings() {
+  // TODO: replace with real API call
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
@@ -18,6 +24,13 @@ export default function TabTwoScreen() {
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
   const theme = useTheme();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchEarnings();
+    setRefreshing(false);
+  }, []);
 
   const contentPlatformStyle = Platform.select({
     android: {
@@ -36,7 +49,15 @@ export default function TabTwoScreen() {
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
+      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={brandTeal}
+          colors={[brandTeal]}
+        />
+      }>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
           <ThemedText type="subtitle">Explore</ThemedText>
