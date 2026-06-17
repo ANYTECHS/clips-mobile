@@ -33,6 +33,7 @@ export default function RootLayout() {
         <Stack.Screen name="sign-in" />
         <Stack.Screen name="auth/callback" />
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="clip-editor" options={{ presentation: 'modal' }} />
       </Stack>
 
       {!isAuthenticated && <Redirect href="/sign-in" />}
