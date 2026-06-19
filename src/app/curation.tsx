@@ -123,7 +123,16 @@ export default function CurationScreen() {
                   { backgroundColor: theme.backgroundElement },
                   isSelected && styles.cardSelected,
                 ]}
-                onPress={() => toggleClip(item.id)}
+                onPress={() =>
+                  router.push({
+                    pathname: '/clip-editor',
+                    params: {
+                      clipId: item.id,
+                      caption: `Clip #${item.id} — ${item.duration} 🔥 #shorts #trending`,
+                    },
+                  })
+                }
+                onLongPress={() => toggleClip(item.id)}
               >
                 {/* Thumbnail placeholder */}
                 <View style={[styles.thumbnail, { backgroundColor: theme.backgroundSelected }]}>
