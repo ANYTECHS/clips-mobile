@@ -10,10 +10,6 @@ export default function RootLayout() {
       <AnimatedSplashOverlay />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="connect-accounts"
-          options={{ headerShown: false }}
-        />
       </Stack>
     </ThemeProvider>
   );
