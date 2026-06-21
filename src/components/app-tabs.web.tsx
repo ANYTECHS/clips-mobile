@@ -13,7 +13,7 @@ import { ExternalLink } from './external-link';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
 
-import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
+import { Colors, MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
 
 export default function AppTabs() {
   return (
@@ -24,11 +24,14 @@ export default function AppTabs() {
           <TabTrigger name="home" href="/" asChild>
             <TabButton>Home</TabButton>
           </TabTrigger>
-          <TabTrigger name="explore" href="/explore" asChild>
-            <TabButton>Explore</TabButton>
-          </TabTrigger>
           <TabTrigger name="upload" href="/(tabs)/upload" asChild>
             <TabButton>Upload</TabButton>
+          </TabTrigger>
+          <TabTrigger name="my-clips" href="/(tabs)/my-clips" asChild>
+            <TabButton>My Clips</TabButton>
+          </TabTrigger>
+          <TabTrigger name="profile" href="/(tabs)/profile" asChild>
+            <TabButton>Profile</TabButton>
           </TabTrigger>
         </CustomTabList>
       </TabList>
@@ -41,8 +44,11 @@ export function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps
     <Pressable {...props} style={({ pressed }) => pressed && styles.pressed}>
       <ThemedView
         type={isFocused ? 'backgroundSelected' : 'backgroundElement'}
-        style={styles.tabButtonView}>
-        <ThemedText type="small" themeColor={isFocused ? 'text' : 'textSecondary'}>
+        style={[styles.tabButtonView, isFocused && styles.activeTabButtonView]}>
+        <ThemedText
+          type={isFocused ? 'smallBold' : 'small'}
+          themeColor={isFocused ? 'text' : 'textSecondary'}
+          style={isFocused && styles.activeTabText}>
           {children}
         </ThemedText>
       </ThemedView>
@@ -107,6 +113,13 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.one,
     paddingHorizontal: Spacing.three,
     borderRadius: Spacing.three,
+  },
+  activeTabButtonView: {
+    borderColor: brandTeal,
+    borderWidth: 1,
+  },
+  activeTabText: {
+    color: brandTeal,
   },
   externalPressable: {
     flexDirection: 'row',
