@@ -1,47 +1,30 @@
-import * as Device from 'expo-device';
+import { useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
-import { Platform, RefreshControl, ScrollView, StyleSheet } from 'react-native';
+import { Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
-}
+const RECENT_PROJECTS = [
+  { title: 'Podcast highlights', editedAt: 'Edited 12 min ago', clips: 18 },
+  { title: 'Gaming stream recap', editedAt: 'Edited yesterday', clips: 42 },
+];
 
-async function fetchClips() {
-  // TODO: replace with real API call
+async function fetchDashboard() {
+  // TODO: replace with real API call once the dashboard endpoint is wired.
   await new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
 export default function HomeScreen() {
-  const theme = useTheme();
+  const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchClips();
+    await fetchDashboard();
     setRefreshing(false);
   }, []);
 
@@ -60,26 +43,67 @@ export default function HomeScreen() {
         }>
         <SafeAreaView style={styles.safeArea}>
           <ThemedView style={styles.heroSection}>
-            <AnimatedIcon />
-            <ThemedText type="title" style={styles.title}>
-              Welcome to&nbsp;Expo
-            </ThemedText>
+            <View style={styles.heroCopy}>
+              <ThemedText type="title" style={styles.title}>
+                Welcome back, Creator!
+              </ThemedText>
+              <ThemedText themeColor="textSecondary" style={styles.subtitle}>
+                Turn long videos into short clips, review the best moments, and publish faster.
+              </ThemedText>
+            </View>
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Quick Upload"
+              onPress={() => router.push('/(tabs)/upload')}
+              style={({ pressed }) => [styles.quickUploadButton, pressed && styles.pressed]}>
+              <ThemedText type="smallBold" style={styles.quickUploadText}>
+                Quick Upload
+              </ThemedText>
+            </Pressable>
           </ThemedView>
 
-          <ThemedText type="code" style={styles.code}>
-            get started
-          </ThemedText>
+          <ThemedView type="backgroundElement" style={styles.earningsCard}>
+            <View>
+              <ThemedText type="small" themeColor="textSecondary">
+                Total Earnings
+              </ThemedText>
+              <ThemedText type="subtitle" style={styles.earningsAmount}>
+                $12,480
+              </ThemedText>
+            </View>
+            <View style={styles.changePill}>
+              <ThemedText type="smallBold" style={styles.changeText}>
+                +18.4%
+              </ThemedText>
+            </View>
+          </ThemedView>
 
-          <ThemedView type="backgroundElement" style={styles.stepContainer}>
-            <HintRow
-              title="Try editing"
-              hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-            />
-            <HintRow title="Dev tools" hint={getDevMenuHint()} />
-            <HintRow
-              title="Fresh start"
-              hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-            />
+          <ThemedView style={styles.projectsSection}>
+            <View style={styles.sectionHeader}>
+              <ThemedText type="subtitle" style={styles.sectionTitle}>
+                Recent Projects
+              </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary">
+                2 active
+              </ThemedText>
+            </View>
+
+            {RECENT_PROJECTS.map((project) => (
+              <ThemedView type="backgroundElement" style={styles.projectCard} key={project.title}>
+                <View style={styles.projectCopy}>
+                  <ThemedText type="smallBold">{project.title}</ThemedText>
+                  <ThemedText type="small" themeColor="textSecondary">
+                    {project.editedAt}
+                  </ThemedText>
+                </View>
+                <View style={styles.clipBadge}>
+                  <ThemedText type="smallBold" style={styles.clipBadgeText}>
+                    {project.clips} clips
+                  </ThemedText>
+                </View>
+              </ThemedView>
+            ))}
           </ThemedView>
 
           {Platform.OS === 'web' && <WebBadge />}
@@ -104,30 +128,93 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
+    paddingTop: Spacing.four,
     paddingBottom: BottomTabInset + Spacing.three,
+    gap: Spacing.three,
     maxWidth: MaxContentWidth,
     width: '100%',
   },
   heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
     gap: Spacing.four,
+    paddingTop: Spacing.three,
+  },
+  heroCopy: {
+    gap: Spacing.two,
   },
   title: {
-    textAlign: 'center',
+    fontSize: 42,
+    lineHeight: 46,
   },
-  code: {
-    textTransform: 'uppercase',
+  subtitle: {
+    fontSize: 16,
+    lineHeight: 24,
   },
-  stepContainer: {
+  quickUploadButton: {
+    minHeight: 52,
+    borderRadius: Spacing.three,
+    backgroundColor: brandTeal,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.four,
+  },
+  pressed: {
+    opacity: 0.82,
+  },
+  quickUploadText: {
+    color: '#000',
+  },
+  earningsCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.four,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     gap: Spacing.three,
-    alignSelf: 'stretch',
+  },
+  earningsAmount: {
+    marginTop: Spacing.one,
+  },
+  changePill: {
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 229, 160, 0.16)',
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    paddingVertical: Spacing.two,
+  },
+  changeText: {
+    color: brandTeal,
+  },
+  projectsSection: {
+    gap: Spacing.two,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: Spacing.three,
+  },
+  sectionTitle: {
+    fontSize: 26,
+    lineHeight: 32,
+  },
+  projectCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+  },
+  projectCopy: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  clipBadge: {
+    borderRadius: 999,
+    backgroundColor: '#111111',
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+  },
+  clipBadgeText: {
+    color: '#fff',
   },
 });
