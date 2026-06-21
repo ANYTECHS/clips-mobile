@@ -1,9 +1,11 @@
+import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Skeleton } from '@/components/ui/skeleton';
 import { BottomTabInset, Spacing, brandTeal } from '@/constants/theme';
 import { useClipsStore } from '@/stores/clips-store';
 
@@ -27,8 +29,39 @@ function EmptyState() {
   );
 }
 
+function ClipSkeletonList() {
+  return (
+    <View style={styles.skeletonList}>
+      {Array.from({ length: 4 }).map((_, index) => (
+        <ThemedView
+          key={index}
+          type="backgroundElement"
+          style={styles.skeletonCard}
+        >
+          <Skeleton
+            height={112}
+            borderRadius={Spacing.three}
+            style={styles.skeletonThumbnail}
+          />
+          <View style={styles.skeletonCopy}>
+            <Skeleton width="72%" height={18} />
+            <Skeleton width="46%" height={14} />
+          </View>
+        </ThemedView>
+      ))}
+    </View>
+  );
+}
+
 export default function MyClipsScreen() {
   const clips = Object.keys(useClipsStore((s) => s.selections));
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 650);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <ThemedView style={styles.container}>
@@ -36,7 +69,9 @@ export default function MyClipsScreen() {
         <ThemedText type="subtitle" style={styles.heading}>
           My Clips
         </ThemedText>
-        {clips.length === 0 ? (
+        {isLoading ? (
+          <ClipSkeletonList />
+        ) : clips.length === 0 ? (
           <EmptyState />
         ) : (
           <FlatList
@@ -80,4 +115,19 @@ const styles = StyleSheet.create({
   ctaText: { color: '#000' },
   list: { paddingHorizontal: Spacing.four, gap: Spacing.two },
   clipItem: { paddingVertical: Spacing.two },
+  skeletonList: {
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.three,
+  },
+  skeletonCard: {
+    borderRadius: Spacing.three,
+    padding: Spacing.three,
+    gap: Spacing.three,
+  },
+  skeletonThumbnail: {
+    alignSelf: 'stretch',
+  },
+  skeletonCopy: {
+    gap: Spacing.two,
+  },
 });
