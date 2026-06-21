@@ -8,7 +8,8 @@ import { HintRow } from '@/components/hint-row';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
+import { MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
+import { useBottomTabInset } from '@/hooks/use-bottom-tab-inset';
 import { useTheme } from '@/hooks/use-theme';
 
 function getDevMenuHint() {
@@ -37,6 +38,7 @@ async function fetchClips() {
 
 export default function HomeScreen() {
   const theme = useTheme();
+  const bottomTabInset = useBottomTabInset();
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -58,7 +60,7 @@ export default function HomeScreen() {
             colors={[brandTeal]}
           />
         }>
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={[styles.safeArea, { paddingBottom: bottomTabInset + Spacing.three }]}>
           <ThemedView style={styles.heroSection}>
             <AnimatedIcon />
             <ThemedText type="title" style={styles.title}>
@@ -106,7 +108,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.four,
     alignItems: 'center',
     gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
     maxWidth: MaxContentWidth,
     width: '100%',
   },

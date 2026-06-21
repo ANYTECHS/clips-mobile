@@ -14,7 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import PayoutBottomSheet from '@/components/PayoutBottomSheet';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { useBottomTabInset } from '@/hooks/use-bottom-tab-inset';
 import { useTheme } from '@/hooks/use-theme';
 import {
   EarningsData,
@@ -40,6 +41,7 @@ const STATUS_COLOR: Record<string, string> = {
 export default function EarningsScreen() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const bottomTabInset = useBottomTabInset();
   const [data, setData] = useState<EarningsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -81,7 +83,7 @@ export default function EarningsScreen() {
   }
 
   const isDark = theme.background === '#000000';
-  const bottomPad = insets.bottom + BottomTabInset + Spacing.three;
+  const bottomPad = bottomTabInset + Spacing.three;
 
   if (loading) {
     return (

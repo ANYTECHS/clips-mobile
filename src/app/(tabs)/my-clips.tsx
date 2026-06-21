@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing, brandTeal } from '@/constants/theme';
+import { Spacing, brandTeal } from '@/constants/theme';
+import { useBottomTabInset } from '@/hooks/use-bottom-tab-inset';
 import { useClipsStore } from '@/stores/clips-store';
 
 function EmptyState() {
@@ -29,10 +30,11 @@ function EmptyState() {
 
 export default function MyClipsScreen() {
   const clips = Object.keys(useClipsStore((s) => s.selections));
+  const bottomTabInset = useBottomTabInset();
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={[styles.safeArea, { paddingBottom: bottomTabInset }]} edges={['top']}>
         <ThemedText type="subtitle" style={styles.heading}>
           My Clips
         </ThemedText>
@@ -55,7 +57,7 @@ export default function MyClipsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  safeArea: { flex: 1, paddingBottom: BottomTabInset },
+  safeArea: { flex: 1 },
   heading: {
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.three,
