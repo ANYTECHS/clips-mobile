@@ -30,13 +30,14 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(auth)" />
         <Stack.Screen name="sign-in" />
         <Stack.Screen name="auth/callback" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="clip-editor" options={{ presentation: 'modal' }} />
       </Stack>
 
-      {!isAuthenticated && <Redirect href="/sign-in" />}
+      {!isAuthenticated && <Redirect href="/sign-up" />}
 
       <AnimatedSplashOverlay />
       <AppTabs />
