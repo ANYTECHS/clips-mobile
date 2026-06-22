@@ -9,7 +9,8 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
+import { MaxContentWidth, Spacing, brandTeal } from '@/constants/theme';
+import { useBottomTabInset } from '@/hooks/use-bottom-tab-inset';
 import { useTheme } from '@/hooks/use-theme';
 
 async function fetchEarnings() {
@@ -19,9 +20,10 @@ async function fetchEarnings() {
 
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
+  const bottomTabInset = useBottomTabInset();
   const insets = {
     ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
+    bottom: bottomTabInset + Spacing.three,
   };
   const theme = useTheme();
   const [refreshing, setRefreshing] = useState(false);

@@ -6,7 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { BottomTabInset, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useBottomTabInset } from '@/hooks/use-bottom-tab-inset';
 
 type PickedFile = { name: string; size: number };
 
@@ -17,6 +18,7 @@ function formatBytes(bytes: number) {
 
 export default function UploadScreen() {
   const router = useRouter();
+  const bottomTabInset = useBottomTabInset();
   const [file, setFile] = useState<PickedFile | null>(null);
   const [url, setUrl] = useState('');
 
@@ -53,7 +55,7 @@ export default function UploadScreen() {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={[styles.safeArea, { paddingBottom: bottomTabInset + Spacing.three }]}>
         <ThemedText type="title" style={styles.heading}>
           Upload Video
         </ThemedText>
@@ -129,7 +131,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: Spacing.four,
     paddingTop: Spacing.four,
-    paddingBottom: BottomTabInset + Spacing.three,
     gap: Spacing.three,
   },
   heading: { marginBottom: Spacing.two },
