@@ -7,7 +7,16 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
-export const brandTeal = '#00BFA5';
+export const brand = {
+  accent: '#00E5A0',
+  accentDark: '#00B37D',
+  surface: '#0A1A14',
+  surfaceCard: '#10241C',
+  danger: '#FF5A5F',
+  textMuted: '#8AA99A',
+} as const;
+
+export const brandTeal = brand.accent;
 
 export const Colors = {
   light: {
@@ -20,9 +29,9 @@ export const Colors = {
   dark: {
     text: '#ffffff',
     background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    backgroundElement: brand.surface,
+    backgroundSelected: brand.surfaceCard,
+    textSecondary: brand.textMuted,
   },
 } as const;
 
